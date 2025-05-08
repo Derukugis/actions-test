@@ -1,54 +1,24 @@
-# This is a basic workflow to help you get started with Actions
+name: Ngrok SSH Tunnel
 
-name: CI
-
-# Controls when the workflow will run
 on:
-  # Triggers the workflow on push or pull request events but only for the "main" branch
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:  # Allows you to start the tunnel manually
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
-    # The type of runner that the job will run on
+  ngrok-tunnel:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      # Install ngrok
-      - name: Install ngrok
-        run: |
-          curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-          | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
-          && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
-          | sudo tee /etc/apt/sources.list.d/ngrok.list \
-          && sudo apt update \
-          && sudo apt install ngrok
+      - name: Start Ngrok Tunnel for SSH
+        uses: tmshkr/ngrok-ssh@latest
+        with:
+          NGROK_AUTHTOKEN: ${{ secrets.NGROK_AUTHTOKEN }}
+          # If you want to supply a custom SSH public key:
+          # SSH_PUBLIC_KEY: ${{ secrets.SSH_PUBLIC_KEY }}
+          # The action waits until a connection is established:
+          WAIT_FOR_CONNECTION: 'true'
 
-      # Install and configure OpenSSH Server
-      - name: Install OpenSSH Server
-        run: |
-          apt update -y
-          apt install -y openssh-server
-          systemctl enable ssh
-          systemctl start ssh
-          echo "PermitRootLogin no" >> /etc/ssh/sshd_config
-          echo "PasswordAuthentication no" >> /etc/ssh/sshd_config
-          systemctl restart ssh
-
-      # Start ngrok tunnel for SSH access
-      - name: Start ngrok SSH tunnel
-        run: |
-          ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-          ngrok tcp 22
-          echo ts
+      - name: Keep Tunnel Open
+        # This step ensures the job remains active to keep the tunnel open.
+        run: sleep 3600
