@@ -29,11 +29,11 @@ jobs:
       - name: Install ngrok
         run: |
           curl -sSL https://ngrok-agent.s3.amazonaws.com/ngrok.asc \
-          | tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
+          | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null \
           && echo "deb https://ngrok-agent.s3.amazonaws.com buster main" \
-          | tee /etc/apt/sources.list.d/ngrok.list \
-          && apt update \
-          && apt install ngrok
+          | sudo tee /etc/apt/sources.list.d/ngrok.list \
+          && sudo apt update \
+          && sudo apt install ngrok
 
       # Install and configure OpenSSH Server
       - name: Install OpenSSH Server
@@ -51,3 +51,4 @@ jobs:
         run: |
           ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
           ngrok tcp 22
+          echo ts
